@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kanban タスク管理アプリ</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header class="app-header">
+            <h1>📋 タスク管理アプリ</h1>
+        </header>
+
+        <section class="input-section">
+            <input
+                type="text"
+                id="taskInput"
+                class="task-input"
+                placeholder="タスクを入力..."
+                autocomplete="off"
+            >
+            <button id="addBtn" class="add-button">追加</button>
+        </section>
+
+        <section class="kanban-board">
+            <div class="kanban-column" id="todoColumn">
+                <h2 class="column-title">やることリスト</h2>
+                <div class="tasks-container" id="todoTasks">
+                    <!-- タスクがここに動的に追加される -->
+                </div>
+            </div>
+
+            <div class="kanban-column" id="inprogressColumn">
+                <h2 class="column-title">進行中</h2>
+                <div class="tasks-container" id="inprogressTasks">
+                    <!-- タスクがここに動的に追加される -->
+                </div>
+            </div>
+
+            <div class="kanban-column" id="doneColumn">
+                <h2 class="column-title">完了</h2>
+                <div class="tasks-container" id="doneTasks">
+                    <!-- タスクがここに動的に追加される -->
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

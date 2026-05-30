@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kanban タスク管理アプリ</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .app-header {
+            text-align: center;
+            margin-bottom: 30px;
+            color: white;
+        }
+
+        .app-header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Input Section */
+        .input-section {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+            margin-bottom: 30px;
+        }
+
+        .input-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .input-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .task-input {
+            flex: 1;
+            padding: 12px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+        }
+
+        .task-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 8px rgba(102, 126, 234, 0.3);
+        }
+
+        .deadline-input {
+            padding: 12px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            min-width: 200px;
+            transition: border-color 0.3s ease;
+        }
+
+        .deadline-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 8px rgba(102, 126, 234, 0.3);
+        }
+
+        .add-button {
+            padding: 12px 32px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .add-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .add-button:active {
+            transform: translateY(0);
+        }
+
+        /* Kanban Board */
+        .kanban-board {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .kanban-column {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            max-height: 600px;
+        }
+
+        .column-title {
+            padding: 16px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            font-size: 18px;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        .tasks-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 12px;
+            min-height: 400px;
+            background: #f8f9fa;
+        }
+
+        .tasks-container:empty::after {
+            content: 'タスクを追加してください';
+            display: block;
+            text-align: center;
+            padding: 40px 20px;
+            color: #999;
+            font-style: italic;
+        }
+
+        /* Task Card */
+        .task-card {
+            background: white;
+            border-left: 4px solid #667eea;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 10px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            cursor: move;
+            transition: all 0.3s ease;
+            user-select: none;
+        }
+
+        .task-card:hover {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            transform: translateY(-2px);
+        }
+
+        .task-card.dragging {
+            opacity: 0.5;
+        }
+
+        .task-card.overdue {
+            border-left-color: #ff4757;
+            background-color: #fff5f5;
+        }
+
+        .task-card.deadline-near {
+            border-left-color: #ffa502;
+            background-color: #fffbf0;
+        }
+
+        .task-title {
+            font-size: 16px;
+            font-weight: 500;
+            color: #333;
+            word-wrap: break-word;
+            margin-bottom: 8px;
+        }
+
+        .task-deadline {
+            font-size: 12px;
+            padding: 4px 8px;
+            border-radius: 4px;
+            margin-bottom: 8px;
+            display: inline-block;
+            font-weight: 500;
+        }
+
+        .task-deadline.overdue {
+            background: #ff4757;
+            color: white;
+        }
+
+        .task-deadline.deadline-near {
+            background: #ffa502;
+            color: white;
+        }
+
+        .task-deadline.safe {
+            background: #2ed573;
+            color: white;
+        }
+
+        .task-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .task-status-select {
+            padding: 4px 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 12px;
+            cursor: pointer;
+            background: white;
+            transition: border-color 0.2s;
+        }
+
+        .task-status-select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .delete-button {
+            padding: 4px 8px;
+            background: #ff6b6b;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .delete-button:hover {
+            background: #ff5252;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1024px) {
+            .kanban-board {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .app-header h1 {
+                font-size: 2rem;
+            }
+
+            .input-row {
+                flex-wrap: wrap;
+            }
+
+            .deadline-input {
+                flex: 1;
+                min-width: 150px;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .kanban-board {
+                grid-template-columns: 1fr;
+            }
+
+            .input-row {
+                flex-direction: column;
+            }
+
+            .add-button {
+                width: 100%;
+            }
+
+            .deadline-input {
+                width: 100%;
+            }
+
+            .tasks-container {
+                max-height: 300px;
+            }
+        }
+
+        /* Drag and Drop Styling */
+        .tasks-container.drag-over {
+            background-color: #e8eaf6;
+            border: 2px dashed #667eea;
+        }
+
+        .helper-text {
+            font-size: 12px;
+            color: #666;
+            margin-top: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="app-header">
+            <h1>📋 タスク管理アプリ</h1>
+        </header>
+
+        <section class="input-section">
+            <div class="input-row">
+                <input
+                    type="text"
+                    id="taskInput"
+                    class="task-input"
+                    placeholder="タスクを入力..."
+                    autocomplete="off"
+                >
+                <input
+                    type="date"
+                    id="deadlineInput"
+                    class="deadline-input"
+                >
+                <button id="addBtn" class="add-button">追加</button>
+            </div>
+            <div class="helper-text">
+                💡 期限はカレンダー（日付入力）またはテキスト（YYYY-MM-DD）で入力できます。同じ列内でドラッグして順番を変更できます。
+            </div>
+        </section>
+
+        <section class="kanban-board">
+            <div class="kanban-column" id="todoColumn">
+                <h2 class="column-title">やることリスト</h2>
+                <div class="tasks-container" id="todoTasks">
+                    <!-- タスクがここに動的に追加される -->
+                </div>
+            </div>
+
+            <div class="kanban-column" id="inprogressColumn">
+                <h2 class="column-title">進行中</h2>
+                <div class="tasks-container" id="inprogressTasks">
+                    <!-- タスクがここに動的に追加される -->
+                </div>
+            </div>
+
+            <div class="kanban-column" id="doneColumn">
+                <h2 class="column-title">完了</h2>
+                <div class="tasks-container" id="doneTasks">
+                    <!-- タスクがここに動的に追加される -->
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <script>
+        class KanbanApp {
+            constructor() {
+                this.tasks = [];
+                this.storageKey = 'kanban-tasks';
+                this.draggedTask = null;
+                this.draggedFromContainer = null;
+                this.init();
+            }
+
+            init() {
+                this.cacheDOM();
+                this.bindEvents();
+                this.loadTasksFromStorage();
+            }
+
+            cacheDOM() {
+                this.taskInput = document.getElementById('taskInput');
+                this.deadlineInput = document.getElementById('deadlineInput');
+                this.addBtn = document.getElementById('addBtn');
+                this.todoTasks = document.getElementById('todoTasks');
+                this.inprogressTasks = document.getElementById('inprogressTasks');
+                this.doneTasks = document.getElementById('doneTasks');
+                this.containers = [this.todoTasks, this.inprogressTasks, this.doneTasks];
+            }
+
+            bindEvents() {
+                this.addBtn.addEventListener('click', () => this.addTask());
+                this.taskInput.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') this.addTask();
+                });
+
+                this.containers.forEach(container => {
+                    container.addEventListener('dragover', (e) => this.handleDragOver(e));
+                    container.addEventListener('drop', (e) => this.handleDrop(e));
+                    container.addEventListener('dragleave', (e) => this.handleDragLeave(e));
+                });
+            }
+
+            loadTasksFromStorage() {
+                const stored = localStorage.getItem(this.storageKey);
+                if (stored) {
+                    this.tasks = JSON.parse(stored);
+                } else {
+                    this.tasks = [
+                        { id: '1', title: 'プロジェクト企画書を作成', status: 'todo', deadline: '2026-06-10', order: 0 },
+                        { id: '2', title: 'クライアントとのミーティング準備', status: 'todo', deadline: '2026-06-05', order: 1 },
+                        { id: '3', title: 'デザイン案の確認', status: 'inprogress', deadline: '2026-05-30', order: 0 },
+                        { id: '4', title: 'フロントエンド実装', status: 'inprogress', deadline: '2026-06-15', order: 1 },
+                        { id: '5', title: 'テスト完了', status: 'done', deadline: '2026-05-25', order: 0 },
+                        { id: '6', title: 'ドキュメント作成', status: 'done', deadline: '2026-05-28', order: 1 }
+                    ];
+                    this.saveToStorage();
+                }
+                this.render();
+            }
+
+            saveToStorage() {
+                localStorage.setItem(this.storageKey, JSON.stringify(this.tasks));
+            }
+
+            addTask() {
+                const title = this.taskInput.value.trim();
+                if (!title) {
+                    alert('タスクを入力してください');
+                    return;
+                }
+
+                const deadline = this.deadlineInput.value || '';
+
+                const newTask = {
+                    id: Date.now().toString(),
+                    title: title,
+                    status: 'todo',
+                    deadline: deadline,
+                    order: this.getMaxOrder('todo') + 1
+                };
+
+                this.tasks.push(newTask);
+                this.taskInput.value = '';
+                this.deadlineInput.value = '';
+                this.taskInput.focus();
+                this.saveToStorage();
+                this.render();
+            }
+
+            deleteTask(id) {
+                if (confirm('このタスクを削除しますか？')) {
+                    this.tasks = this.tasks.filter(t => t.id !== id);
+                    this.saveToStorage();
+                    this.render();
+                }
+            }
+
+            updateTaskStatus(id, newStatus) {
+                const task = this.tasks.find(t => t.id === id);
+                if (task) {
+                    task.status = newStatus;
+                    task.order = this.getMaxOrder(newStatus) + 1;
+                    this.saveToStorage();
+                    this.render();
+                }
+            }
+
+            getMaxOrder(status) {
+                const statusTasks = this.tasks.filter(t => t.status === status);
+                if (statusTasks.length === 0) return -1;
+                return Math.max(...statusTasks.map(t => t.order || 0));
+            }
+
+            getDeadlineStatus(deadline) {
+                if (!deadline) return 'no-deadline';
+
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+
+                const deadlineDate = new Date(deadline);
+                const diffTime = deadlineDate - today;
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+                if (diffDays < 0) return 'overdue';
+                if (diffDays <= 3) return 'deadline-near';
+                return 'safe';
+            }
+
+            formatDeadline(deadline) {
+                if (!deadline) return '';
+                const date = new Date(deadline);
+                const status = this.getDeadlineStatus(deadline);
+                const formatter = new Intl.DateTimeFormat('ja-JP', {
+                    month: 'short',
+                    day: 'numeric'
+                });
+                const formatted = formatter.format(date);
+
+                if (status === 'overdue') return `期限超過: ${formatted}`;
+                if (status === 'deadline-near') return `期限: ${formatted}`;
+                return `期限: ${formatted}`;
+            }
+
+            handleDragOver(e) {
+                e.preventDefault();
+                e.currentTarget.classList.add('drag-over');
+            }
+
+            handleDragLeave(e) {
+                e.currentTarget.classList.remove('drag-over');
+            }
+
+            handleDrop(e) {
+                e.preventDefault();
+                e.currentTarget.classList.remove('drag-over');
+
+                const taskId = e.dataTransfer.getData('text/plain');
+                const targetContainer = e.currentTarget;
+
+                let newStatus = 'todo';
+                if (targetContainer === this.inprogressTasks) {
+                    newStatus = 'inprogress';
+                } else if (targetContainer === this.doneTasks) {
+                    newStatus = 'done';
+                }
+
+                this.updateTaskStatus(taskId, newStatus);
+            }
+
+            render() {
+                this.clearContainers();
+
+                // ステータスごとにグループ化して順序でソート
+                ['todo', 'inprogress', 'done'].forEach(status => {
+                    const statusTasks = this.tasks
+                        .filter(t => t.status === status)
+                        .sort((a, b) => (a.order || 0) - (b.order || 0));
+
+                    statusTasks.forEach(task => {
+                        const cardHTML = this.createTaskCard(task);
+                        const targetContainer = this.getContainerByStatus(task.status);
+                        targetContainer.insertAdjacentHTML('beforeend', cardHTML);
+                    });
+                });
+
+                this.attachTaskCardEvents();
+            }
+
+            createTaskCard(task) {
+                const deadlineStatus = this.getDeadlineStatus(task.deadline);
+                const deadlineClass = `task-deadline ${deadlineStatus}`;
+                const deadlineHTML = task.deadline
+                    ? `<span class="${deadlineClass}">${this.formatDeadline(task.deadline)}</span>`
+                    : '';
+
+                const cardClass = `task-card ${deadlineStatus === 'overdue' ? 'overdue' : ''} ${deadlineStatus === 'deadline-near' ? 'deadline-near' : ''}`;
+
+                return `
+                    <div class="${cardClass}" draggable="true" data-id="${task.id}">
+                        <div class="task-title">${this.escapeHtml(task.title)}</div>
+                        ${deadlineHTML}
+                        <div class="task-footer">
+                            <select class="task-status-select" data-id="${task.id}">
+                                <option value="todo" ${task.status === 'todo' ? 'selected' : ''}>やることリスト</option>
+                                <option value="inprogress" ${task.status === 'inprogress' ? 'selected' : ''}>進行中</option>
+                                <option value="done" ${task.status === 'done' ? 'selected' : ''}>完了</option>
+                            </select>
+                            <button class="delete-button" data-id="${task.id}">削除</button>
+                        </div>
+                    </div>
+                `;
+            }
+
+            attachTaskCardEvents() {
+                document.querySelectorAll('.task-card').forEach(card => {
+                    card.addEventListener('dragstart', (e) => {
+                        e.dataTransfer.effectAllowed = 'move';
+                        e.dataTransfer.setData('text/plain', card.dataset.id);
+                        card.classList.add('dragging');
+                        this.draggedTask = card.dataset.id;
+                        this.draggedFromContainer = card.parentElement;
+                    });
+
+                    card.addEventListener('dragend', (e) => {
+                        card.classList.remove('dragging');
+                    });
+                });
+
+                document.querySelectorAll('.delete-button').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const taskId = btn.dataset.id;
+                        this.deleteTask(taskId);
+                    });
+                });
+
+                document.querySelectorAll('.task-status-select').forEach(select => {
+                    select.addEventListener('change', (e) => {
+                        const taskId = select.dataset.id;
+                        const newStatus = e.target.value;
+                        this.updateTaskStatus(taskId, newStatus);
+                    });
+                });
+            }
+
+            clearContainers() {
+                this.containers.forEach(container => {
+                    container.innerHTML = '';
+                });
+            }
+
+            getContainerByStatus(status) {
+                switch (status) {
+                    case 'inprogress':
+                        return this.inprogressTasks;
+                    case 'done':
+                        return this.doneTasks;
+                    default:
+                        return this.todoTasks;
+                }
+            }
+
+            escapeHtml(text) {
+                const map = {
+                    '&': '&amp;',
+                    '<': '&lt;',
+                    '>': '&gt;',
+                    '"': '&quot;',
+                    "'": '&#039;'
+                };
+                return text.replace(/[&<>"']/g, m => map[m]);
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            new KanbanApp();
+        });
+    </script>
+</body>
+</html>
