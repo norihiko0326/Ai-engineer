@@ -127,6 +127,30 @@ git push -u origin feature/issue-5-add-kanban-board
 - **.claude/settings.json**: git push origin main の実行を検出して警告
 - このCLAUDE.mdファイルがClaude Codeの行動を規定する
 
+### ポート管理
+**Claude Codeはサーバー起動時に必ず以下を実施する：**
+
+| ポート | 用途 | デフォルト | 対応 |
+|---|---|---|---|
+| 8080 | バックエンド（Spring Boot） | `docker-compose up` | 競合時：既存プロセスを `kill -9 <PID>` で停止後に起動 |
+| 5173 | フロント開発サーバー（Vite） | `npm run dev` | 競合時：既存プロセスを停止後に起動 |
+
+**手順**:
+```bash
+# ポート使用状況確認
+lsof -i :8080  # バックエンドのポート確認
+lsof -i :5173  # フロントのポート確認
+
+# 既存プロセスを強制終了（PIDを確認してから）
+kill -9 <PID>
+
+# 指定ポートで起動
+cd kanban-task-app && docker-compose up       # バックエンド
+cd kanban-task-app/frontend && npm run dev    # フロント
+```
+
+**重要**: 異なるポートでの起動は許さない。常に設定されたポートを使用すること。
+
 ---
 
 ## 例：新機能追加のフロー
