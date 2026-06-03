@@ -59,6 +59,14 @@ interface TaskProviderProps {
   children: ReactNode;
 }
 
+export const useTaskContext = (): TaskContextValue => {
+  const context = React.useContext(TaskContext);
+  if (!context) {
+    throw new Error('useTaskContext must be used within TaskProvider');
+  }
+  return context;
+};
+
 export const TaskProvider: React.FC<TaskProviderProps> = ({ children }) => {
   const [state, dispatch] = useReducer(taskReducer, initialState);
 
