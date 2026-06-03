@@ -1,11 +1,16 @@
 package com.taskapp.controller;
 
+import com.taskapp.dto.TaskRequest;
+import com.taskapp.dto.TaskResponse;
 import com.taskapp.entity.Task;
 import com.taskapp.entity.TaskStatus;
 import com.taskapp.repository.TaskRepository;
+import com.taskapp.service.TaskService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import jakarta.validation.Valid;
 
 import java.util.List;
 import java.util.Optional;
@@ -17,6 +22,9 @@ public class TaskController {
 
     @Autowired
     private TaskRepository taskRepository;
+
+    @Autowired
+    private TaskService taskService;
 
     @GetMapping
     public ResponseEntity<List<Task>> getAllTasks() {
@@ -51,9 +59,9 @@ public class TaskController {
     }
 
     @PostMapping
-    public ResponseEntity<Task> createTask(@RequestBody Task task) {
-        Task savedTask = taskRepository.save(task);
-        return ResponseEntity.ok(savedTask);
+    public ResponseEntity<TaskResponse> createTask(@RequestBody @Valid TaskRequest request) {
+        TaskResponse response = taskService.createTask(request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     @PutMapping("/{id}")

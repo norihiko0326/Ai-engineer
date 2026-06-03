@@ -1,6 +1,6 @@
 import React, { createContext, useReducer, useEffect, type ReactNode } from 'react';
 import type { Task, TaskStatus } from '../types/task';
-import { fetchAllTasks, fetchTasksByStatus, searchTasksByKeyword } from '../api/taskApi';
+import { fetchAllTasks, fetchTasksByStatus, searchTasksByKeyword, createTask as createTaskApi } from '../api/taskApi';
 import axios from 'axios';
 
 export interface TaskState {
@@ -18,7 +18,8 @@ export type TaskAction =
   | { type: 'SET_ERROR'; payload: string | null }
   | { type: 'SET_SEARCH_QUERY'; payload: string }
   | { type: 'SET_DEBOUNCED_QUERY'; payload: string }
-  | { type: 'SET_STATUS_FILTER'; payload: TaskStatus | 'all' };
+  | { type: 'SET_STATUS_FILTER'; payload: TaskStatus | 'all' }
+  | { type: 'ADD_TASK'; payload: Task };
 
 const initialState: TaskState = {
   displayTasks: [],
@@ -43,6 +44,8 @@ const taskReducer = (state: TaskState, action: TaskAction): TaskState => {
       return { ...state, debouncedQuery: action.payload };
     case 'SET_STATUS_FILTER':
       return { ...state, statusFilter: action.payload };
+    case 'ADD_TASK':
+      return { ...state, displayTasks: [action.payload, ...state.displayTasks] };
     default:
       return state;
   }
@@ -51,6 +54,14 @@ const taskReducer = (state: TaskState, action: TaskAction): TaskState => {
 export interface TaskContextValue extends TaskState {
   filteredTasks: Task[];
   dispatch: React.Dispatch<TaskAction>;
+  createTask: (data: {
+    title: string;
+    description?: string;
+    status: string;
+    priority: number;
+    dueDate?: string | null;
+    createdBy?: string;
+  }) => Promise<void>;
 }
 
 export const TaskContext = createContext<TaskContextValue | undefined>(undefined);
@@ -118,10 +129,32 @@ export const TaskProvider: React.FC<TaskProviderProps> = ({ children }) => {
     return () => controller.abort();
   }, [state.debouncedQuery, state.statusFilter]);
 
+  const createTask = async (data: {
+    title: string;
+    description?: string;
+    status: string;
+    priority: number;
+    dueDate?: string | null;
+    createdBy?: string;
+  }) => {
+    try {
+      dispatch({ type: 'SET_ERROR', payload: null });
+      const newTask = await createTaskApi(data);
+      dispatch({ type: 'ADD_TASK', payload: newTask });
+    } catch (error) {
+      dispatch({
+        type: 'SET_ERROR',
+        payload: error instanceof Error ? error.message : 'Failed to create task',
+      });
+      throw error;
+    }
+  };
+
   const value: TaskContextValue = {
     ...state,
     filteredTasks: state.displayTasks,
     dispatch,
+    createTask,
   };
 
   return <TaskContext.Provider value={value}>{children}</TaskContext.Provider>;

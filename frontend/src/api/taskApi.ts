@@ -49,3 +49,20 @@ export const searchTasksByKeyword = async (keyword: string): Promise<Task[]> => 
     throw error;
   }
 };
+
+export const createTask = async (data: {
+  title: string;
+  description?: string;
+  status: string;
+  priority: number;
+  dueDate?: string | null;
+  createdBy?: string;
+}): Promise<Task> => {
+  try {
+    const response = await api.post<Task>('/api/tasks', data);
+    return response.data;
+  } catch (error) {
+    console.error('Failed to create task:', error);
+    throw error;
+  }
+};
