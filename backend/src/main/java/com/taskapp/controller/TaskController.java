@@ -38,6 +38,12 @@ public class TaskController {
         return ResponseEntity.ok(tasks);
     }
 
+    @GetMapping("/search")
+    public ResponseEntity<List<Task>> searchTasks(@RequestParam String keyword) {
+        List<Task> tasks = taskRepository.findByTitleContainingIgnoreCase(keyword);
+        return ResponseEntity.ok(tasks);
+    }
+
     @GetMapping("/priority/{priority}")
     public ResponseEntity<List<Task>> getTasksByPriority(@PathVariable Integer priority) {
         List<Task> tasks = taskRepository.findByPriority(priority);
