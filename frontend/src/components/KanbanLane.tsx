@@ -15,6 +15,8 @@ interface KanbanLaneProps {
   title: string;
   tasks: Task[];
   onAddTask: () => void;
+  onDragOver?: (e: React.DragEvent) => void;
+  onDrop?: (e: React.DragEvent) => void;
 }
 
 const getHeaderColor = (status: TaskStatus) => {
@@ -30,7 +32,25 @@ const getHeaderColor = (status: TaskStatus) => {
   }
 };
 
-export const KanbanLane: React.FC<KanbanLaneProps> = ({ status, title, tasks, onAddTask }) => {
+export const KanbanLane: React.FC<KanbanLaneProps> = ({
+  status,
+  title,
+  tasks,
+  onAddTask,
+  onDragOver,
+  onDrop
+}) => {
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    if (onDragOver) onDragOver(e);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    if (onDrop) onDrop(e);
+  };
+
   return (
     <Paper
       sx={{
@@ -60,13 +80,27 @@ export const KanbanLane: React.FC<KanbanLaneProps> = ({ status, title, tasks, on
           </Box>
         </Box>
       </Box>
-      <Box sx={{ p: 2, overflow: 'auto', flex: 1 }}>
+      <Box
+        data-droppable-id={status}
+        onDragOver={handleDragOver}
+        onDrop={handleDrop}
+        sx={{
+          padding: 2,
+          overflow: 'auto',
+          flex: 1,
+          backgroundColor: 'transparent',
+          transition: 'background-color 0.2s',
+          minHeight: 0,
+        }}
+      >
         {tasks.length === 0 ? (
           <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'center', mt: 2 }}>
             タスクなし
           </Typography>
         ) : (
-          tasks.map(task => <TaskCard key={task.id} task={task} />)
+          tasks.map((task, index) => (
+            <TaskCard key={task.id} task={task} index={index} />
+          ))
         )}
       </Box>
     </Paper>

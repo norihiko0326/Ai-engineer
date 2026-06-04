@@ -20,5 +20,8 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
     @Query("SELECT t FROM Task t WHERE t.status = ?1 ORDER BY t.priority ASC")
     List<Task> findByStatusOrderByPriority(TaskStatus status);
 
+    @Query("SELECT t FROM Task t WHERE t.status = ?1 ORDER BY t.order ASC")
+    List<Task> findByStatusOrderByOrder(TaskStatus status);
+
     List<Task> findByTitleContainingIgnoreCase(String keyword);
 }

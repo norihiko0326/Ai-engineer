@@ -42,7 +42,7 @@ public class TaskController {
     @GetMapping("/status/{status}")
     public ResponseEntity<List<Task>> getTasksByStatus(@PathVariable String status) {
         TaskStatus taskStatus = TaskStatus.valueOf(status.toUpperCase());
-        List<Task> tasks = taskRepository.findByStatus(taskStatus);
+        List<Task> tasks = taskRepository.findByStatusOrderByOrder(taskStatus);
         return ResponseEntity.ok(tasks);
     }
 
@@ -81,10 +81,31 @@ public class TaskController {
             if (taskDetails.getPriority() != null) {
                 task.setPriority(taskDetails.getPriority());
             }
+            if (taskDetails.getOrder() != null) {
+                task.setOrder(taskDetails.getOrder());
+            }
             Task updatedTask = taskRepository.save(task);
             return ResponseEntity.ok(updatedTask);
         }
         return ResponseEntity.notFound().build();
+    }
+
+    @PutMapping("/bulk/update-status-and-order")
+    public ResponseEntity<Void> updateTasksStatusAndOrder(@RequestBody List<Task> tasks) {
+        for (Task taskDetails : tasks) {
+            Optional<Task> optionalTask = taskRepository.findById(taskDetails.getId());
+            if (optionalTask.isPresent()) {
+                Task task = optionalTask.get();
+                if (taskDetails.getStatus() != null) {
+                    task.setStatus(taskDetails.getStatus());
+                }
+                if (taskDetails.getOrder() != null) {
+                    task.setOrder(taskDetails.getOrder());
+                }
+                taskRepository.save(task);
+            }
+        }
+        return ResponseEntity.ok().build();
     }
 
     @DeleteMapping("/{id}")

@@ -1,17 +1,19 @@
-FROM maven:3.9-eclipse-temurin-21 as builder
+FROM gradle:8-jdk21 as builder
 
 WORKDIR /build
 
-COPY pom.xml .
+COPY build.gradle .
+COPY gradle ./gradle
+COPY settings.gradle .
 COPY src ./src
 
-RUN mvn clean package -DskipTests
+RUN gradle clean build -x test
 
 FROM eclipse-temurin:21-jre-alpine
 
 WORKDIR /app
 
-COPY --from=builder /build/target/kanban-task-app-*.jar app.jar
+COPY --from=builder /build/build/libs/kanban-task-app-*.jar app.jar
 
 EXPOSE 8080
 

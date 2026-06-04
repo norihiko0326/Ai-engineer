@@ -66,3 +66,12 @@ export const createTask = async (data: {
     throw error;
   }
 };
+
+export const updateTaskStatusAndOrder = async (tasks: Array<{ id: number; status: string; order: number }>): Promise<void> => {
+  try {
+    await api.put('/api/tasks/bulk/update-status-and-order', tasks);
+  } catch (error) {
+    console.error('Failed to update task status and order:', error);
+    throw error;
+  }
+};

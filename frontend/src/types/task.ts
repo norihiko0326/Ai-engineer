@@ -9,6 +9,7 @@ export interface Task {
   dueDate?: string | null;
   createdBy?: string;
   updatedBy?: string | null;
+  order?: number;
   createdAt: string;
   updatedAt: string;
 }

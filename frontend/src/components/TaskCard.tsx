@@ -10,6 +10,7 @@ import type { Task } from '../types/task';
 
 interface TaskCardProps {
   task: Task;
+  index: number;
 }
 
 const getPriorityColor = (priority?: number) => {
@@ -31,8 +32,24 @@ const getPriorityLabel = (priority?: number) => {
 export const TaskCard: React.FC<TaskCardProps> = ({ task }) => {
   const createdDate = new Date(task.createdAt).toLocaleDateString('ja-JP');
 
+  const handleDragStart = (e: React.DragEvent) => {
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('taskId', String(task.id));
+    e.dataTransfer.setData('taskStatus', task.status);
+  };
+
   return (
-    <Card sx={{ mb: 1, cursor: 'pointer', '&:hover': { boxShadow: 2 } }}>
+    <Card
+      draggable
+      onDragStart={handleDragStart}
+      sx={{
+        mb: 1,
+        cursor: 'grab',
+        '&:hover': { boxShadow: 2 },
+        '&:active': { cursor: 'grabbing' },
+        userSelect: 'none',
+      }}
+    >
       <CardContent>
         <Typography variant="h6" sx={{ mb: 1, fontWeight: 'bold' }}>
           {task.title}
