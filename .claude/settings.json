@@ -1,0 +1,17 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "label": "Prevent direct push to main branch",
+        "actions": [
+          {
+            "type": "error",
+            "when": "command matches 'git push.*origin.*main|git push.*main|git commit.*--amend'",
+            "message": "❌ mainへの直接pushまたは直接commitは禁止されています。\n\nCLAUDE.md に記載のワークフローに従ってください：\n1. Issue を作成する（gh issue create）\n2. ブランチを切る（git checkout -b feature/issue-N-...）\n3. コード作成・コミット\n4. PR を作成する（gh pr create）\n5. PR をマージしてからブランチ削除\n\n詳細は CLAUDE.md を参照してください。"
+          }
+        ]
+      }
+    ]
+  }
+}
