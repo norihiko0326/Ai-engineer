@@ -5,8 +5,6 @@ import './index.css'
 import App from './App.tsx'
 import { TaskProvider } from './context/TaskContext'
 
-console.log('main.tsx loaded');
-
 const theme = createTheme({
   palette: {
     background: {
@@ -15,9 +13,8 @@ const theme = createTheme({
   },
 });
 
-function renderApp() {
+function renderApp(): void {
   const rootElement = document.getElementById('root');
-  console.log('renderApp called, rootElement:', rootElement);
 
   if (rootElement) {
     try {
@@ -30,7 +27,6 @@ function renderApp() {
           </ThemeProvider>
         </StrictMode>,
       );
-      console.log('React app rendered successfully');
     } catch (error) {
       console.error('Error rendering React app:', error);
     }

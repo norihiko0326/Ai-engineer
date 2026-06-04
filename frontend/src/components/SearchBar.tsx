@@ -17,8 +17,9 @@ export const SearchBar: React.FC = () => {
     dispatch({ type: 'SET_SEARCH_QUERY', payload: e.target.value });
   };
 
-  const handleStatusChange = (e: any) => {
-    dispatch({ type: 'SET_STATUS_FILTER', payload: e.target.value as TaskStatus | 'all' });
+  const handleStatusChange = (e: React.ChangeEvent<{ value: unknown }> | { target: { value: unknown } }): void => {
+    const value = (e.target as HTMLSelectElement).value as TaskStatus | 'all';
+    dispatch({ type: 'SET_STATUS_FILTER', payload: value });
   };
 
   return (

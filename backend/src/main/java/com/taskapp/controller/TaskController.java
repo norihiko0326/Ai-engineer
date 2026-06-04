@@ -2,118 +2,85 @@ package com.taskapp.controller;
 
 import com.taskapp.dto.TaskRequest;
 import com.taskapp.dto.TaskResponse;
-import com.taskapp.entity.Task;
 import com.taskapp.entity.TaskStatus;
-import com.taskapp.repository.TaskRepository;
 import com.taskapp.service.TaskService;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.taskapp.util.ApiResponse;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import jakarta.validation.Valid;
 
 import java.util.List;
-import java.util.Optional;
 
+@Slf4j
 @RestController
 @RequestMapping("/api/tasks")
-@CrossOrigin(origins = "*")
+@RequiredArgsConstructor
 public class TaskController {
 
-    @Autowired
-    private TaskRepository taskRepository;
-
-    @Autowired
-    private TaskService taskService;
+    private final TaskService taskService;
 
     @GetMapping
-    public ResponseEntity<List<Task>> getAllTasks() {
-        List<Task> tasks = taskRepository.findAll();
-        return ResponseEntity.ok(tasks);
+    public ResponseEntity<ApiResponse<List<TaskResponse>>> getAllTasks() {
+        log.debug("Fetching all tasks");
+        List<TaskResponse> tasks = taskService.getAllTasks();
+        return ResponseEntity.ok(ApiResponse.success(tasks));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Task> getTaskById(@PathVariable Long id) {
-        Optional<Task> task = taskRepository.findById(id);
-        return task.map(ResponseEntity::ok)
-                .orElseGet(() -> ResponseEntity.notFound().build());
+    public ResponseEntity<ApiResponse<TaskResponse>> getTaskById(@PathVariable Long id) {
+        log.debug("Fetching task by id: {}", id);
+        TaskResponse task = taskService.getTaskById(id);
+        return ResponseEntity.ok(ApiResponse.success(task));
     }
 
     @GetMapping("/status/{status}")
-    public ResponseEntity<List<Task>> getTasksByStatus(@PathVariable String status) {
+    public ResponseEntity<ApiResponse<List<TaskResponse>>> getTasksByStatus(@PathVariable String status) {
+        log.debug("Fetching tasks by status: {}", status);
         TaskStatus taskStatus = TaskStatus.valueOf(status.toUpperCase());
-        List<Task> tasks = taskRepository.findByStatusOrderByOrder(taskStatus);
-        return ResponseEntity.ok(tasks);
+        List<TaskResponse> tasks = taskService.getTasksByStatus(taskStatus);
+        return ResponseEntity.ok(ApiResponse.success(tasks));
     }
 
     @GetMapping("/search")
-    public ResponseEntity<List<Task>> searchTasks(@RequestParam String keyword) {
-        List<Task> tasks = taskRepository.findByTitleContainingIgnoreCase(keyword);
-        return ResponseEntity.ok(tasks);
-    }
-
-    @GetMapping("/priority/{priority}")
-    public ResponseEntity<List<Task>> getTasksByPriority(@PathVariable Integer priority) {
-        List<Task> tasks = taskRepository.findByPriority(priority);
-        return ResponseEntity.ok(tasks);
+    public ResponseEntity<ApiResponse<List<TaskResponse>>> searchTasks(@RequestParam String keyword) {
+        log.debug("Searching tasks with keyword: {}", keyword);
+        List<TaskResponse> tasks = taskService.searchTasks(keyword);
+        return ResponseEntity.ok(ApiResponse.success(tasks));
     }
 
     @PostMapping
-    public ResponseEntity<TaskResponse> createTask(@RequestBody @Valid TaskRequest request) {
+    public ResponseEntity<ApiResponse<TaskResponse>> createTask(@RequestBody @Valid TaskRequest request) {
+        log.info("Creating new task with title: {}", request.getTitle());
         TaskResponse response = taskService.createTask(request);
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success(response));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Task> updateTask(@PathVariable Long id, @RequestBody Task taskDetails) {
-        Optional<Task> optionalTask = taskRepository.findById(id);
-        if (optionalTask.isPresent()) {
-            Task task = optionalTask.get();
-            if (taskDetails.getTitle() != null) {
-                task.setTitle(taskDetails.getTitle());
-            }
-            if (taskDetails.getDescription() != null) {
-                task.setDescription(taskDetails.getDescription());
-            }
-            if (taskDetails.getStatus() != null) {
-                task.setStatus(taskDetails.getStatus());
-            }
-            if (taskDetails.getPriority() != null) {
-                task.setPriority(taskDetails.getPriority());
-            }
-            if (taskDetails.getOrder() != null) {
-                task.setOrder(taskDetails.getOrder());
-            }
-            Task updatedTask = taskRepository.save(task);
-            return ResponseEntity.ok(updatedTask);
-        }
-        return ResponseEntity.notFound().build();
+    public ResponseEntity<ApiResponse<TaskResponse>> updateTask(@PathVariable Long id, @RequestBody @Valid TaskRequest request) {
+        log.info("Updating task with id: {}", id);
+        TaskResponse response = taskService.updateTask(id, request);
+        return ResponseEntity.ok(ApiResponse.success(response));
     }
 
     @PutMapping("/bulk/update-status-and-order")
-    public ResponseEntity<Void> updateTasksStatusAndOrder(@RequestBody List<Task> tasks) {
-        for (Task taskDetails : tasks) {
-            Optional<Task> optionalTask = taskRepository.findById(taskDetails.getId());
-            if (optionalTask.isPresent()) {
-                Task task = optionalTask.get();
-                if (taskDetails.getStatus() != null) {
-                    task.setStatus(taskDetails.getStatus());
-                }
-                if (taskDetails.getOrder() != null) {
-                    task.setOrder(taskDetails.getOrder());
-                }
-                taskRepository.save(task);
+    public ResponseEntity<ApiResponse<Void>> updateTasksStatusAndOrder(
+            @RequestBody List<TaskRequest> requests) {
+        log.info("Bulk updating {} tasks", requests.size());
+        for (TaskRequest request : requests) {
+            if (request.getId() != null) {
+                taskService.updateTask(request.getId(), request);
             }
         }
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok(ApiResponse.success(null));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteTask(@PathVariable Long id) {
-        if (taskRepository.existsById(id)) {
-            taskRepository.deleteById(id);
-            return ResponseEntity.noContent().build();
-        }
-        return ResponseEntity.notFound().build();
+    public ResponseEntity<ApiResponse<Void>> deleteTask(@PathVariable Long id) {
+        log.info("Deleting task with id: {}", id);
+        taskService.deleteTask(id);
+        return ResponseEntity.noContent().build();
     }
 }

@@ -27,14 +27,12 @@ export const KanbanBoard: React.FC = () => {
     await createTask(data);
   };
 
-  const handleDrop = (e: React.DragEvent, destStatus: TaskStatus) => {
+  const handleDrop = (e: React.DragEvent, destStatus: TaskStatus): void => {
     const taskId = e.dataTransfer.getData('taskId');
-    const sourceStatus = e.dataTransfer.getData('taskStatus') as TaskStatus;
 
     if (!taskId) return;
 
     const draggedTaskId = parseInt(taskId);
-    console.log('Drop event:', { taskId: draggedTaskId, sourceStatus, destStatus });
 
     const destTasks = filteredTasks
       .filter(t => t.status === destStatus)
