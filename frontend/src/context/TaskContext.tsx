@@ -66,14 +66,17 @@ export interface TaskContextValue extends TaskState {
     createdBy?: string;
   }) => Promise<void>;
   deleteTask: (id: number) => Promise<void>;
+  refreshTasks: () => Promise<void>;
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const TaskContext = createContext<TaskContextValue | undefined>(undefined);
 
 interface TaskProviderProps {
   children: ReactNode;
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const useTaskContext = (): TaskContextValue => {
   const context = React.useContext(TaskContext);
   if (!context) {
@@ -168,12 +171,27 @@ export const TaskProvider: React.FC<TaskProviderProps> = ({ children }) => {
     }
   };
 
+  const refreshTasks = async () => {
+    try {
+      dispatch({ type: 'SET_ERROR', payload: null });
+      const tasks = await fetchAllTasks();
+      dispatch({ type: 'SET_TASKS', payload: tasks });
+    } catch (error) {
+      console.error('refreshTasks error:', error);
+      dispatch({
+        type: 'SET_ERROR',
+        payload: error instanceof Error ? error.message : 'Failed to refresh tasks',
+      });
+    }
+  };
+
   const value: TaskContextValue = {
     ...state,
     filteredTasks: state.displayTasks,
     dispatch,
     createTask,
     deleteTask,
+    refreshTasks,
   };
 
   return <TaskContext.Provider value={value}>{children}</TaskContext.Provider>;

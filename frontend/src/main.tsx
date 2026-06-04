@@ -13,12 +13,30 @@ const theme = createTheme({
   },
 });
 
-createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    <ThemeProvider theme={theme}>
-      <TaskProvider>
-        <App />
-      </TaskProvider>
-    </ThemeProvider>
-  </StrictMode>,
-)
+function renderApp(): void {
+  const rootElement = document.getElementById('root');
+
+  if (rootElement) {
+    try {
+      createRoot(rootElement).render(
+        <StrictMode>
+          <ThemeProvider theme={theme}>
+            <TaskProvider>
+              <App />
+            </TaskProvider>
+          </ThemeProvider>
+        </StrictMode>,
+      );
+    } catch (error) {
+      console.error('Error rendering React app:', error);
+    }
+  } else {
+    console.error('Root element not found');
+  }
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', renderApp);
+} else {
+  renderApp();
+}

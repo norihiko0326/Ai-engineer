@@ -28,6 +28,9 @@ public class Task {
     @Column(nullable = false)
     private Integer priority;
 
+    @Column(name = "\"order\"", columnDefinition = "INTEGER DEFAULT 0")
+    private Integer order;
+
     @Column(name = "due_date")
     private LocalDateTime dueDate;
 

@@ -67,11 +67,11 @@ export const createTask = async (data: {
   }
 };
 
-export const deleteTask = async (id: number): Promise<void> => {
+export const updateTaskStatusAndOrder = async (tasks: Array<{ id: number; status: string; order: number }>): Promise<void> => {
   try {
-    await api.delete(`/api/tasks/${id}`);
+    await api.put('/api/tasks/bulk/update-status-and-order', tasks);
   } catch (error) {
-    console.error(`Failed to delete task ${id}:`, error);
+    console.error('Failed to update task status and order:', error);
     throw error;
   }
 };

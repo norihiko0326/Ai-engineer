@@ -15,6 +15,8 @@ import java.time.LocalDateTime;
 @Builder
 public class TaskRequest {
 
+    private Long id;
+
     @NotBlank(message = "Title is required")
     @Size(min = 1, max = 255, message = "Title must be between 1 and 255 characters")
     private String title;
@@ -29,6 +31,9 @@ public class TaskRequest {
     @Min(value = 1, message = "Priority must be between 1 and 5")
     @Max(value = 5, message = "Priority must be between 1 and 5")
     private Integer priority;
+
+    @Min(value = 0, message = "Order must be non-negative")
+    private Integer order;
 
     private LocalDateTime dueDate;
 
