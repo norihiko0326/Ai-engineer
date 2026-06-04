@@ -1,6 +1,6 @@
 import React, { createContext, useReducer, useEffect, type ReactNode } from 'react';
 import type { Task, TaskStatus } from '../types/task';
-import { fetchAllTasks, fetchTasksByStatus, searchTasksByKeyword, createTask as createTaskApi } from '../api/taskApi';
+import { fetchAllTasks, fetchTasksByStatus, searchTasksByKeyword, createTask as createTaskApi, deleteTask as deleteTaskApi } from '../api/taskApi';
 import axios from 'axios';
 
 export interface TaskState {
@@ -19,7 +19,8 @@ export type TaskAction =
   | { type: 'SET_SEARCH_QUERY'; payload: string }
   | { type: 'SET_DEBOUNCED_QUERY'; payload: string }
   | { type: 'SET_STATUS_FILTER'; payload: TaskStatus | 'all' }
-  | { type: 'ADD_TASK'; payload: Task };
+  | { type: 'ADD_TASK'; payload: Task }
+  | { type: 'REMOVE_TASK'; payload: number };
 
 const initialState: TaskState = {
   displayTasks: [],
@@ -46,6 +47,8 @@ const taskReducer = (state: TaskState, action: TaskAction): TaskState => {
       return { ...state, statusFilter: action.payload };
     case 'ADD_TASK':
       return { ...state, displayTasks: [action.payload, ...state.displayTasks] };
+    case 'REMOVE_TASK':
+      return { ...state, displayTasks: state.displayTasks.filter(task => task.id !== action.payload) };
     default:
       return state;
   }
@@ -62,6 +65,7 @@ export interface TaskContextValue extends TaskState {
     dueDate?: string | null;
     createdBy?: string;
   }) => Promise<void>;
+  deleteTask: (id: number) => Promise<void>;
 }
 
 export const TaskContext = createContext<TaskContextValue | undefined>(undefined);
@@ -150,11 +154,26 @@ export const TaskProvider: React.FC<TaskProviderProps> = ({ children }) => {
     }
   };
 
+  const deleteTask = async (id: number) => {
+    try {
+      dispatch({ type: 'SET_ERROR', payload: null });
+      await deleteTaskApi(id);
+      dispatch({ type: 'REMOVE_TASK', payload: id });
+    } catch (error) {
+      dispatch({
+        type: 'SET_ERROR',
+        payload: error instanceof Error ? error.message : 'Failed to delete task',
+      });
+      throw error;
+    }
+  };
+
   const value: TaskContextValue = {
     ...state,
     filteredTasks: state.displayTasks,
     dispatch,
     createTask,
+    deleteTask,
   };
 
   return <TaskContext.Provider value={value}>{children}</TaskContext.Provider>;

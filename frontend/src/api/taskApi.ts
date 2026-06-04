@@ -66,3 +66,12 @@ export const createTask = async (data: {
     throw error;
   }
 };
+
+export const deleteTask = async (id: number): Promise<void> => {
+  try {
+    await api.delete(`/api/tasks/${id}`);
+  } catch (error) {
+    console.error(`Failed to delete task ${id}:`, error);
+    throw error;
+  }
+};
