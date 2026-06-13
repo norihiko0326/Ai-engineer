@@ -23,3 +23,20 @@ yarn.lock
 # Environment
 .env
 .env.local
+
+# Terraform
+terraform-deploy/.terraform/
+terraform-deploy/*.tfstate
+terraform-deploy/*.tfstate.backup
+terraform-deploy/credentials.tfvars
+terraform-deploy/.terraform.lock.hcl
+terraform-deploy/*.tfplan
+terraform-deploy/tfplan
+
+# AWS
+*.pem
+aws_credentials
+
+# Build artifacts
+dist/
+build/
